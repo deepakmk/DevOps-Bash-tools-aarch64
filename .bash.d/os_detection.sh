@@ -17,6 +17,7 @@ type is_linux &>/dev/null &&
 type isMac &>/dev/null &&
 type isGoogleCloudShell &>/dev/null &&
 type isAzureCloudShell &>/dev/null &&
+type is_linux_aarch64 &>/dev/null &&
 return
 
 get_os(){
@@ -26,12 +27,29 @@ get_os(){
         export operating_system
     fi
 }
+get_os_arch(){
+     if [ -z "${operating_system:-}" ] ||
+       ! [[ "$operating_system" =~ ^(Linux|Darwin)$ ]]; then
+        arch="$(uname -m)"
+        export arch
+    fi
+}
 
 isLinux(){
     [ -n "${LINUX:-}" ] && return 0
     get_os
     if [ "$operating_system" = Linux ]; then
         export LINUX=1
+        return 0
+    fi
+    return 1
+}
+isLinuxAarch64(){
+    [ -n "${LINUX:-}" ] && return 0
+    get_os_arch
+    if [ "$arch" = aarch64 ] && [ "$operating_system" = Linux ]; then
+        export LINUX=1
+        export AARCH64=1
         return 0
     fi
     return 1
@@ -87,6 +105,9 @@ is_google_cloud_shell(){
 
 is_azure_cloud_shell(){
     isAzureCloudShell "$@"
+}
+is_linux_aarch64(){
+    isLinuxAarch64
 }
 
 # make this safe to import in set -e scripts
